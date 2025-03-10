@@ -6,14 +6,15 @@
 #include <fstream>
 #include <limits.h>
 #include <cmath>
-#include <chrono>
+#include <iomanip>
+#include <ctime>
 
 using namespace std;
 
-void hide_features(vector <int> &current_set, vector <double> &object_to_classify, int feature_to_add);
+void hide_features(vector <int> &current_set, int feature_to_add, vector <double> &object_to_prune);
 double euclidean_distance(const vector <double> &vec1, const vector <double> &vec2);
 double leave_one_out_cross_validation(vector <vector<double> > &data, int numColumns, int numRows, vector <int> &current_set, int feature_to_add);
-double feature_search(vector <vector<double> > &data, int numColumns, int numRows);
+void feature_search(vector <vector<double> > &data, int numColumns, int numRows);
 
 int main(){
 
@@ -56,52 +57,55 @@ int main(){
     file.close();
 
     cout << "\nThis dataset has " << numColumns - 1 << " features (not including the class attribute), with " << numRows << " instances." << endl << endl;
-    cout << "Running nearest neighbor with all " << numColumns - 1<< " features, using \"leave-one-out\" evaluation, I get an accuracy of %" << endl << endl;
-
     cout << "Beginning search." << endl;
 
+    std::clock_t start = std::clock();
     feature_search(data, numColumns, numRows);
-
+    std::clock_t end = std::clock();
+    double time = static_cast<double>(end - start) / CLOCKS_PER_SEC;
+    cout << "Total time = " << time << " seconds" << endl;
 }
 
-double euclidean_distance(const vector <double> &vec1, const vector <double> &vec2){
-    if (vec1.size() != vec2.size()){
-        cout << "vector lengths are not equal" << endl;
+double euclidean_distance(const vector<double> &vec1, const vector<double> &vec2) {
+    if (vec1.size() != vec2.size()) {
+        cerr << "Error: Vector lengths are not equal" << endl;
         return -1.0;
     }
 
     double sum = 0.0;
-    for (int i = 1; i < vec1.size(); ++i){ //skip class label, start at i = 1
-        sum += pow(vec2[i] - vec1[i], 2);
+    for (size_t i = 1; i < vec1.size(); ++i) {  // Skip first element
+        double diff = vec2[i] - vec1[i];
+        sum += diff * diff;
     }
-  
-    return sqrt(sum);
+
+    double result = sqrt(sum);
+    return result;
 }
 
-void hide_features(vector <int> &current_set, vector <double> &object_to_classify, int feature_to_add){
+void hide_features(vector <int> &current_set, int feature_to_add, vector <double> &object_to_prune){
 
-    // cout << "BEFORE PRUNING object_to_classify: ";
-    //     for (int n = 1; n < object_to_classify.size(); ++n){
-    //         cout << object_to_classify[n] << " ";
+    // cout << "BEFORE PRUNING object_to_prune: ";
+    //     for (int n = 1; n < object_to_prune.size(); ++n){
+    //         cout << object_to_prune[n] << " ";
     //     }
     // cout << endl;
 
-    for (int i = 1; i < object_to_classify.size(); ++i){
+    for (int i = 1; i < object_to_prune.size(); ++i){
         if (find(current_set.begin(), current_set.end(), i) == current_set.end() && i != feature_to_add){
-            object_to_classify.at(i) = 0;
+            object_to_prune.at(i) = 0;
         }
     }
 
-    // cout << "AFTER PRUNING object_to_classify:  ";
-    //     for (int n = 1; n < object_to_classify.size(); ++n){
-    //         cout << object_to_classify[n] << " ";
+    // cout << "AFTER PRUNING object_to_prune:  ";
+    //     for (int n = 1; n < object_to_prune.size(); ++n){
+    //         cout << object_to_prune[n] << " ";
     //     }
     // cout << endl;
 }
 
 //function stub returns random accuracy to test feature_search
 double leave_one_out_cross_validation(vector <vector<double> > &data, int numColumns, int numRows, vector <int> &current_set, int feature_to_add){
-    double number_correctly_classified = 0.0;
+    double number_correctly_classified = 0;
 
     for (int i = 0; i < numRows - 1; ++i){
         vector <double> object_to_classify = data[i];
@@ -111,18 +115,18 @@ double leave_one_out_cross_validation(vector <vector<double> > &data, int numCol
         double nearest_neighbor_label = -1;
 
         //modifies object_to_classify by hiding features not in current_set + feature_to_add
-        hide_features(current_set, object_to_classify, feature_to_add);
+        hide_features(current_set, feature_to_add, object_to_classify);
 
         for (int k = 1; k < numRows - 1; ++k){
             if (k != i){
                 vector <double> possible_nearest_neighbor = data[k];
+                hide_features(current_set, feature_to_add, possible_nearest_neighbor);
                 double distance = euclidean_distance(object_to_classify, possible_nearest_neighbor);
-                //cout << "Distance = " << distance << endl;
 
                 if (distance < nearest_neighbor_distance){
                     nearest_neighbor_distance = distance;
                     nearest_neighbor_location = k;
-                    nearest_neighbor_label = data[nearest_neighbor_location - 1][0];
+                    nearest_neighbor_label = possible_nearest_neighbor[0];
                 }
             }
         }
@@ -138,21 +142,27 @@ double leave_one_out_cross_validation(vector <vector<double> > &data, int numCol
     return accuracy;
 }
 
-double feature_search (vector <vector<double> > &data, int numColumns, int numRows){
+void feature_search (vector <vector<double> > &data, int numColumns, int numRows){
     vector <int> current_features;
-    int accuracy = 0;
-    int best_accuracy = 0;
+    double accuracy = 0;
+    double best_accuracy = 0;
+    vector <int> best_features;
 
     for (int i = 1; i < numColumns; ++i){
         cout << "On the " << i << "th level of the search tree" << endl;
-        int feature_to_add_at_this_level = 0; //CHANGED 0 to 1
-        int best_accuracy_so_far = 0;
+        int feature_to_add_at_this_level = 0;
+        double best_accuracy_so_far = 0;
 
         for (int j = 1; j < numColumns; ++j){
             if (find(current_features.begin(), current_features.end(), j) == current_features.end()){
-                cout << "--Considering adding the " << j << " feature" << endl;
+                cout << "Considering feature " << j << endl;
                 accuracy = leave_one_out_cross_validation (data, numColumns, numRows, current_features, j);
-                cout << "Accuracy = " << accuracy << "%" << endl;
+                cout << "\tUsing feature(s) {";
+                for (int f = 0; f < current_features.size(); ++f){
+                    cout << current_features.at(f) << ", ";
+                } 
+                cout << j << "} accuracy is " << setprecision(3) << accuracy << "%" << endl;
+                
                 if (accuracy > best_accuracy_so_far){
                     best_accuracy_so_far = accuracy;
                     feature_to_add_at_this_level = j;
@@ -162,12 +172,25 @@ double feature_search (vector <vector<double> > &data, int numColumns, int numRo
 
         best_accuracy = max(best_accuracy, best_accuracy_so_far);
         current_features.push_back(feature_to_add_at_this_level);
+
+        if (best_accuracy == best_accuracy_so_far){
+            best_features = current_features;
+        }
         
-        cout << "Added " << feature_to_add_at_this_level << " to current set" << endl;
+        cout << "Feature set {";
+            for (int f = 0; f < current_features.size() - 1; ++f){
+                cout << current_features.at(f) << ", ";
+            } 
+        cout << current_features.back() << "} was best, accuracy is " << best_accuracy_so_far << "%" << endl;
 
     }
 
-    return best_accuracy;
+    //cout << "Running nearest neighbor with all " << numColumns - 1 << " features, using \"leave-one-out\" evaluation, I get an accuracy of " << best_accuracy << "%" << endl;
+    cout << "Finished search! The best feature subset is {";
+            for (int f = 0; f < best_features.size() - 1; ++f){
+                cout << best_features.at(f) << ", ";
+            } 
+    cout << best_features.back() << "}, which has an accuracy of " << best_accuracy << "%" << endl;
 }
 
 //CS170_Small_Data__87.txt
