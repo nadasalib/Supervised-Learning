@@ -1,0 +1,114 @@
+-----------------------------------------------------------------------------------------------------------------------------------------------
+                                                        FORWARD SELECTION
+-----------------------------------------------------------------------------------------------------------------------------------------------
+Type in the name of the file to test: CS170_Small_Data__87.txt
+Type in the number of the algorithm you want to run.
+1) Forward Selection
+2) Backward Elimination
+
+1
+
+This dataset has 6 features (not including the class attribute), with 500 instances.
+
+Beginning search.
+
+        Using feature(s) {1} accuracy is 72.6%
+        Using feature(s) {2} accuracy is 72.4%
+        Using feature(s) {3} accuracy is 74.8%
+        Using feature(s) {4} accuracy is 70.8%
+        Using feature(s) {5} accuracy is 75.2%
+        Using feature(s) {6} accuracy is 87.6%
+
+Feature set {6} was best, accuracy is 87.6%
+
+        Using feature(s) {6, 1} accuracy is 86.6%
+        Using feature(s) {6, 2} accuracy is 87%
+        Using feature(s) {6, 3} accuracy is 87.2%
+        Using feature(s) {6, 4} accuracy is 86%
+        Using feature(s) {6, 5} accuracy is 94.4%
+
+Feature set {6, 5} was best, accuracy is 94.4%
+
+        Using feature(s) {6, 5, 1} accuracy is 92.4%
+        Using feature(s) {6, 5, 2} accuracy is 94.8%
+        Using feature(s) {6, 5, 3} accuracy is 93.4%
+        Using feature(s) {6, 5, 4} accuracy is 91.6%
+
+Feature set {6, 5, 2} was best, accuracy is 94.8%
+
+        Using feature(s) {6, 5, 2, 1} accuracy is 92.2%
+        Using feature(s) {6, 5, 2, 3} accuracy is 90%
+        Using feature(s) {6, 5, 2, 4} accuracy is 89.8%
+
+Feature set {6, 5, 2, 1} was best, accuracy is 92.2%
+
+        Using feature(s) {6, 5, 2, 1, 3} accuracy is 88.4%
+        Using feature(s) {6, 5, 2, 1, 4} accuracy is 88%
+
+Feature set {6, 5, 2, 1, 3} was best, accuracy is 88.4%
+
+        Using feature(s) {6, 5, 2, 1, 3, 4} accuracy is 84.4%
+
+Feature set {6, 5, 2, 1, 3, 4} was best, accuracy is 84.4%
+
+Finished search! The best feature subset is {6, 5, 2}, which has an accuracy of 94.8%
+Total time = 2.88 seconds
+
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------
+                                                        BACKWARD ELIMINATION
+-----------------------------------------------------------------------------------------------------------------------------------------------
+Type in the name of the file to test: CS170_Small_Data__87.txt
+Type in the number of the algorithm you want to run.
+1) Forward Selection
+2) Backward Elimination
+
+2
+
+This dataset has 6 features (not including the class attribute), with 500 instances.
+
+Running nearest neighbor with 0 features, I get an accuracy of 84%
+Beginning search.
+
+        Using feature(s) {2, 3, 4, 5, 6} accuracy is 85%
+        Using feature(s) {1, 3, 4, 5, 6} accuracy is 86.6%
+        Using feature(s) {1, 2, 4, 5, 6} accuracy is 88%
+        Using feature(s) {1, 2, 3, 5, 6} accuracy is 88.4%
+        Using feature(s) {1, 2, 3, 4, 6} accuracy is 84.4%
+        Using feature(s) {1, 2, 3, 4, 5} accuracy is 77%
+
+Feature set {1, 2, 3, 5, 6} was best, accuracy is 88.4%
+
+        Using feature(s) {2, 3, 5, 6} accuracy is 90%
+        Using feature(s) {1, 3, 5, 6} accuracy is 89.6%
+        Using feature(s) {1, 2, 5, 6} accuracy is 92.2%
+        Using feature(s) {1, 2, 3, 6} accuracy is 85.6%
+        Using feature(s) {1, 2, 3, 5} accuracy is 77.2%
+
+Feature set {1, 2, 5, 6} was best, accuracy is 92.2%
+
+        Using feature(s) {2, 5, 6} accuracy is 94.8%
+        Using feature(s) {1, 5, 6} accuracy is 92.4%
+        Using feature(s) {1, 2, 6} accuracy is 89.4%
+        Using feature(s) {1, 2, 5} accuracy is 77.2%
+
+Feature set {2, 5, 6} was best, accuracy is 94.8%
+
+        Using feature(s) {5, 6} accuracy is 94.4%
+        Using feature(s) {2, 6} accuracy is 87%
+        Using feature(s) {2, 5} accuracy is 78.4%
+
+Feature set {5, 6} was best, accuracy is 94.4%
+
+        Using feature(s) {6} accuracy is 87.6%
+        Using feature(s) {5} accuracy is 75.2%
+
+Feature set {6} was best, accuracy is 87.6%
+
+        Using feature(s) {} accuracy is 83.8%
+
+Feature set {} was best, accuracy is 84%
+
+Finished search! The best feature subset is {2, 5, 6}, which has an accuracy of 94.8%
+Total time = 3.17 seconds
