@@ -76,6 +76,7 @@ int main(){
     cout << "Total time = " << time << " seconds" << endl;
 }
 
+//finds accuracy using greatest occurence of one class label/total number of instances (no features)
 double default_rate(vector <vector<double> > &data, int numRows){
     double numClass1 = 0;
     double numClass2 = 0;
@@ -89,6 +90,7 @@ double default_rate(vector <vector<double> > &data, int numRows){
     return (max(numClass1, numClass2)/numRows) * 100;
 }
 
+//uses euclidean distance formula to find nearest neighbor
 double euclidean_distance(const vector<double> &vec1, const vector<double> &vec2) {
     if (vec1.size() != vec2.size()) {
         cout << "Error: Vector lengths are not equal" << endl;
@@ -96,7 +98,8 @@ double euclidean_distance(const vector<double> &vec1, const vector<double> &vec2
     }
 
     double sum = 0.0;
-    for (size_t i = 1; i < vec1.size(); ++i) {  // Skip first element
+    // Skip class label when calculating distance
+    for (size_t i = 1; i < vec1.size(); ++i) {
         double diff = vec2[i] - vec1[i];
         sum += diff * diff;
     }
@@ -105,13 +108,8 @@ double euclidean_distance(const vector<double> &vec1, const vector<double> &vec2
     return result;
 }
 
-void hide_features(vector <int> &current_set, int feature, vector <double> &object_to_prune, bool directionFlag){ // 0 for forward, 1 for backward
-
-    // cout << "BEFORE PRUNING object_to_prune: ";
-    //     for (int n = 1; n < object_to_prune.size(); ++n){
-    //         cout << object_to_prune[n] << " ";
-    //     }
-    // cout << endl;
+//sets current object's unnecessary features to 0
+void hide_features(vector <int> &current_set, int feature, vector <double> &object_to_prune, bool directionFlag){ //direction flag = 0 for forward, 1 for backward
 
     if (directionFlag == 0){ //forward selection
         for (int i = 1; i < object_to_prune.size(); ++i){
@@ -126,14 +124,9 @@ void hide_features(vector <int> &current_set, int feature, vector <double> &obje
             }
         }
     }
-
-    // cout << "AFTER PRUNING object_to_prune:  ";
-    //     for (int n = 1; n < object_to_prune.size(); ++n){
-    //         cout << object_to_prune[n] << " ";
-    //     }
-    // cout << endl;
 }
 
+//returns accuracy based on number of correctly classified nearest neighbors
 double leave_one_out_cross_validation(vector <vector<double> > &data, int numColumns, int numRows, vector <int> &current_set, int feature, bool directionFlag){
     double number_correctly_classified = 0;
 
@@ -147,6 +140,7 @@ double leave_one_out_cross_validation(vector <vector<double> > &data, int numCol
         //modifies object_to_classify by hiding features not in current_set + feature_to_add
         hide_features(current_set, feature, object_to_classify, directionFlag);
 
+        //calculate the distance of the current object with every other object to find nearest neighbor
         for (int k = 1; k < numRows - 1; ++k){
             if (k != i){
                 vector <double> possible_nearest_neighbor = data[k];
@@ -161,8 +155,7 @@ double leave_one_out_cross_validation(vector <vector<double> > &data, int numCol
             }
         }
 
-        //cout << "Object " << i + 1 << " is in class " <<  label_object_to_classify << endl;
-        //cout << "Its nearest neighbor is " << nearest_neighbor_location << " which is in class " <<  nearest_neighbor_label << endl;
+        //increment number_correctly_classified when the nearest neighbor is in the same class as the current object
         if (label_object_to_classify == nearest_neighbor_label){
             number_correctly_classified++;
         }
@@ -170,30 +163,24 @@ double leave_one_out_cross_validation(vector <vector<double> > &data, int numCol
 
     double accuracy = (number_correctly_classified/(static_cast<double> (numRows))) * 100;
     return accuracy;
-
-    // int min = 0.00;
-    // int max = 100.00;
-    // int randomNumber = min + (rand() % (max - min + 1));
-    // return randomNumber;
 }
 
+//starts with no features, adds one at a time
 void forward_selection (vector <vector<double> > &data, int numColumns, int numRows){
     vector <int> current_features;
     double accuracy = 0;
     double best_accuracy = 0;
     vector <int> best_features;
 
-    //cout << "Running nearest neighbor with all " << numColumns - 1 << " features, using \"leave-one-out\" evaluation, I get an accuracy of " << default_rate(data, numRows) << "%" << endl;
+    cout << "Running nearest neighbor with 0 features, using \"leave-one-out\" evaluation, I get an accuracy of " << default_rate(data, numRows) << "%" << endl;
     cout << "Beginning search.\n" << endl;
 
     for (int i = 1; i < numColumns; ++i){
-        //cout << "On the " << i << "th level of the search tree" << endl;
         int feature_to_add_at_this_level = 0;
         double best_accuracy_so_far = 0;
 
         for (int j = 1; j < numColumns; ++j){
             if (find(current_features.begin(), current_features.end(), j) == current_features.end()){
-                //cout << "Considering feature " << j << endl;
                 accuracy = leave_one_out_cross_validation (data, numColumns, numRows, current_features, j, 0);
                 cout << "\tUsing feature(s) {";
                 for (int f = 0; f < current_features.size(); ++f){
@@ -211,6 +198,7 @@ void forward_selection (vector <vector<double> > &data, int numColumns, int numR
         best_accuracy = max(best_accuracy, best_accuracy_so_far);
         current_features.push_back(feature_to_add_at_this_level);
 
+        //keeps track of best feature set overall
         if (best_accuracy == best_accuracy_so_far){
             best_features = current_features;
         }
@@ -230,6 +218,7 @@ void forward_selection (vector <vector<double> > &data, int numColumns, int numR
     cout << best_features.back() << "}, which has an accuracy of " << setprecision(3) << best_accuracy << "%" << endl;
 }
 
+//starts with all the features, eliminates one at a time
 void backward_elimination (vector <vector<double> > &data, int numColumns, int numRows){
     vector <int> current_features;
     double accuracy = 0;
@@ -237,7 +226,6 @@ void backward_elimination (vector <vector<double> > &data, int numColumns, int n
     vector <int> best_features;
     double defaultRate = default_rate(data, numRows);
 
-    cout << "Running nearest neighbor with 0 features, I get an accuracy of " << defaultRate << "%" << endl;
     cout << "Beginning search.\n" << endl;
 
     // load all features into current_features
@@ -245,24 +233,24 @@ void backward_elimination (vector <vector<double> > &data, int numColumns, int n
         current_features.push_back(i);
     }
     
+    //tterate through each level of the search tree
     for (int i = 1; i < numColumns; ++i){
-        //cout << "On the " << i << "th level of the search tree" << endl;
         int feature_to_remove_at_this_level = 0;
         double best_accuracy_so_far = 0;
 
         for (int j = 1; j < numColumns; ++j){
             if (find(current_features.begin(), current_features.end(), j) != current_features.end()){
-                //cout << "Considering removing feature " << j << endl;
+                //considering removing feature j
                 accuracy = leave_one_out_cross_validation (data, numColumns, numRows, current_features, j, 1);
                 
                 cout << "\tUsing feature(s) {";
-                int count = 0; // Track how many valid features have been printed
+                int count = 0;
 
                 for (int f = 0; f < current_features.size(); ++f) {
-                    if (current_features[f] != j) {  // Exclude feature 'j'
-                        if (count > 0) cout << ", "; // Print comma only after the first printed feature
+                    if (current_features[f] != j) {
+                        if (count > 0) cout << ", ";
                         cout << current_features[f];
-                        ++count; // Increment valid feature count
+                        count++;
                     }
                 } 
 
@@ -277,14 +265,15 @@ void backward_elimination (vector <vector<double> > &data, int numColumns, int n
 
         best_accuracy = max(best_accuracy, best_accuracy_so_far);
         
+        //remove feature "feature_to_remove_at_this_level" from current_set
         if (!current_features.empty()){
             vector<int>::iterator it = find(current_features.begin(), current_features.end(), feature_to_remove_at_this_level);
-            //cout << "Removed feature " << feature_to_remove_at_this_level << endl;
             if (it != current_features.end()) {
                 current_features.erase(it);
             }
         }
 
+        //keep track of the best overall accuracy
         if (best_accuracy == best_accuracy_so_far){
             best_features = current_features;
         }
@@ -309,6 +298,3 @@ void backward_elimination (vector <vector<double> > &data, int numColumns, int n
     } 
     cout << best_features.back() << "}, which has an accuracy of " << setprecision(3) << best_accuracy << "%" << endl;
 }
-
-//CS170_Small_Data__87.txt
-//CS170_Large_Data__123.txt
